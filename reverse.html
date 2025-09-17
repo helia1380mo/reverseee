@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لمس معکوس</title>
+<style>
+body { margin: 0; overflow: hidden; font-family: sans-serif; background: #222; color: #fff; }
+#gameCanvas { background: #333; display: block; margin: 0 auto; }
+.ui { position: fixed; top: 10px; left: 10px; display: flex; gap: 10px; }
+button { padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
+button:hover { opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="400" height="600"></canvas>
+
+<div class="ui">
+<button id="startBtn">شروع بازی</button>
+<button id="pauseBtn">توقف</button>
+<button id="shopBtn">فروشگاه</button>
+<button id="buyLifeBtn">خرید جان</button>
+<button id="watchAdBtn">دیدن تبلیغ</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let player = { x: 200, y: 300, size: 20 };
+let ghosts = [];
+let lastDirection = null;
+let gameRunning = false;
+let lives = 3;
+
+// حرکت بازیکن
+function movePlayer(dir) {
+const step = 20;
+if(dir === 'left') player.x -= step;
+if(dir === 'right') player.x += step;
+if(dir === 'up') player.y -= step;
+if(dir === 'down') player.y += step;
+keepInside();
+}
+
+// نگه داشتن بازیکن داخل صفحه
+function keepInside() {
+if(player.x < 0) player.x = 0;
+if(player.x > canvas.width) player.x = canvas.width;
+if(player.y < 0) player.y = 0;
+if(player.y > canvas.height) player.y = canvas.height;
+}
+
+// لمس صفحه
+canvas.addEventListener('touchstart', (e) => {
+if(!gameRunning) return;
+const touch = e.touches[0];
+const dx = touch.clientX - player.x;
+const dy = touch.clientY - player.y;
+
+let direction;
+if(Math.abs(dx) > Math.abs(dy)) direction = dx>0 ? 'left' : 'right';
+else direction = dy>0 ? 'up' : 'down';
+
+movePlayer(direction);
+lastDirection = direction;
+
+// اضافه کردن شبح بعد 2 ثانیه
+setTimeout(()=>{ghosts.push({x: player.x, y: player.y, size: 20});}, 2000);
+});
+
+// رندر بازی
+function draw() {
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+// بازیکن
+ctx.fillStyle = 'cyan';
+ctx.fillRect(player.x-10, player.y-10, player.size, player.size);
+
+// شبح‌ها
+ctx.fillStyle = 'red';
+ghosts.forEach(g => ctx.fillRect(g.x-10, g.y-10, g.size, g.size));
+
+requestAnimationFrame(draw);
+}
+
+// دکمه‌ها
+document.getElementById('startBtn').onclick = () => { gameRunning = true; ghosts=[]; };
+document.getElementById('pauseBtn').onclick = () => { gameRunning = false; };
+document.getElementById('shopBtn').onclick = () => { alert('فروشگاه باز شد'); };
+document.getElementById('buyLifeBtn').onclick = () => { lives++; alert('جان اضافه شد!'); };
+document.getElementById('watchAdBtn').onclick = () => { lives++; alert('تبلیغ دیده شد و جان اضافه شد!'); };
+
+draw();
+</script>
+
+</body>
+</html>
